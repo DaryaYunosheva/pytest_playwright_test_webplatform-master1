@@ -39,6 +39,8 @@ services:
     container_name: news_frontend
     depends_on:
       - backend
+    environment:
+      VITE_API_URL: http://localhost:8888
     ports:
       - "5137:5137"
     volumes:
