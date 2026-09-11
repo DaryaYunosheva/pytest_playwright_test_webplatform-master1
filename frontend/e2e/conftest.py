@@ -1,11 +1,15 @@
 import pytest
 import allure
+import requests
 from playwright.sync_api import Page, expect, Browser, BrowserContext
 import os
 from pathlib import Path
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5137")
 API_URL = os.getenv("API_URL", "http://localhost:8888")
+
+EMAIL = 'test@example.com'
+PASSWORD = 'password123'
 
 @pytest.fixture(scope="session")
 def browser():
@@ -43,9 +47,11 @@ def page(context: BrowserContext, request):
     context._test_failed = False
     
     yield page
-    
-    # Screenshot on failure
-    if request.node.rep_call.failed:
+
+    rep_call = getattr(request.node, "rep_call", None)
+    rep_setup = getattr(request.node, "rep_setup", None)
+    failed = (rep_call is not None and rep_call.failed) or (rep_setup is not None and rep_setup.failed)
+    if failed:
         context._test_failed = True
         screenshot = page.screenshot(full_page=True)
         allure.attach(screenshot, name="Screenshot", attachment_type=allure.attachment_type.PNG)
@@ -63,3 +69,23 @@ def allure_setup(request):
     """Автоматически добавляет Allure-аннотации из имени теста."""
     test_name = request.node.name.replace("test_", "").replace("_", " ").title()
     allure.dynamic.title(test_name)
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_seed_user():
+    """Гарантирует наличие фиксированного тестового аккаунта, не полагаясь
+    на то, что кто-то когда-то создал его вручную или в прошлом прогоне.
+    Работает независимо от того, чистится БД между прогонами или нет."""
+    try:
+        requests.post(
+            f"{API_URL}/api/auth/register",
+            json={
+                "email": EMAIL,
+                "first_name": "Test",
+                "last_name": "User",
+                "phone": "",
+                "password": PASSWORD,
+            },
+            timeout=10,
+        )
+    except requests.RequestException:
+        pass
