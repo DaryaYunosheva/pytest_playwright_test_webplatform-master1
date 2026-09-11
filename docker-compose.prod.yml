@@ -1,0 +1,95 @@
+# docker-compose.prod.yml
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: news_db_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: news_backend_prod
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE}
+    volumes:
+      - backend_uploads:/app/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8888 --workers 4 --proxy-headers --forwarded-allow-ips='*'
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://archiscope.ru}
+    container_name: news_frontend_prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-https://archiscope.ru}
+    volumes:
+      - frontend_build:/app/dist
+    command: sh -c "npm run build && cp -r dist/* /app/build/"
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    name: news_postgres_data_prod
+  backend_uploads:
+    name: news_backend_uploads_prod
+  frontend_build:
+    name: news_frontend_build_prod
+
+networks:
+  app_network:
+    name: news_app_network
+    driver: bridge

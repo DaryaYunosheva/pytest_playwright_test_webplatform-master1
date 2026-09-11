@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    container_name: news_db
+    environment:
+      POSTGRES_USER: news_user
+      POSTGRES_PASSWORD: news_password
+      POSTGRES_DB: news_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U news_user -d news_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: news_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://news_user:news_password@db:5432/news_db
+      SECRET_KEY: your-secret-key-here-change-in-production
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8888 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: news_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5137:5137"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  postgres_data:
+  backend_uploads:
+  frontend_node_modules:

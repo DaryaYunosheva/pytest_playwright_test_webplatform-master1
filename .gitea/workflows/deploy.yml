@@ -1,0 +1,46 @@
+# .gitea/workflows/deploy-simple.yml
+name: Simple Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to /opt/pytest_playwright_test_webplatform
+        run: |
+          PROJECT_DIR="/opt/pytest_playwright_test_webplatform"
+          
+          # Create directories
+          mkdir -p $PROJECT_DIR
+          mkdir -p $PROJECT_DIR/certs
+          mkdir -p $PROJECT_DIR/nginx/conf.d
+          
+          # Copy files
+          cp -r docker-compose.prod.yml $PROJECT_DIR/
+          cp -r nginx/* $PROJECT_DIR/nginx/
+          
+          # Copy .env if exists
+          if [ -f .env.production ]; then
+            cp .env.production $PROJECT_DIR/.env
+          fi
+          
+          # Deploy
+          cd $PROJECT_DIR
+          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml up -d --build
+          
+          # Show status
+          docker-compose -f docker-compose.prod.yml ps
+
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -f http://localhost:8888/health || exit 1
+          echo "Deployment successful!"
