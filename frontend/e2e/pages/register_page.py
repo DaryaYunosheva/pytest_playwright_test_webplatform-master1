@@ -20,8 +20,13 @@ class RegisterPage(BasePage):
     @allure.step("Зарегистрировать пользователя")
     def register(self, first_name: str, last_name: str, email: str, phone: str, password: str):
         self.fill_form(first_name, last_name, email, phone, password)
+        self.take_screenshot("register.png")
         self.submit()
 
     @allure.step("Проверить сообщение об ошибке")
     def should_see_error(self):
         expect(self.page.locator(".alert-error")).to_be_visible()
+
+    @allure.step("Проверить редирект")
+    def check_redirect(self):
+        expect(self.page.get_by_role("button", name="Войти")).to_be_visible()

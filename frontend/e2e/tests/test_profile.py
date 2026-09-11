@@ -7,18 +7,20 @@ from pages.profile_page import ProfilePage
 @allure.feature("Управление профилем")
 class TestProfile:
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope="function")
     def login(self, page):
         login_page = LoginPage(page)
         login_page.navigate("/login")
         login_page.login("test@example.com", "password123")
+        login_page.check_redirect()
 
     @allure.story("Обновление профиля")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_update_profile(self, page):
+    def test_update_profile(self, page, login):
         profile = ProfilePage(page)
         profile.navigate("/profile")
-        
+        profile.check_redirect()
+
         profile.fill_first_name("Updated")
         profile.fill_last_name("User")
         profile.fill_phone("+79998887766")
@@ -29,7 +31,7 @@ class TestProfile:
 
     @allure.story("Загрузка фото")
     @allure.severity(allure.severity_level.NORMAL)
-    def test_upload_photo(self, page):
+    def test_upload_photo(self, page, login):
         import tempfile
         import os
         
@@ -40,6 +42,7 @@ class TestProfile:
         
         profile = ProfilePage(page)
         profile.navigate("/profile")
+        profile.check_redirect()
         profile.upload_photo(temp_image.name)
         page.wait_for_timeout(2000)
         

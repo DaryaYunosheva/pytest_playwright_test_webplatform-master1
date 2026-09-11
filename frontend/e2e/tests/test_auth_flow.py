@@ -4,6 +4,7 @@ import uuid
 from pages.login_page import LoginPage
 from pages.register_page import RegisterPage
 from pages.news_list_page import NewsListPage
+from playwright.sync_api import expect
 
 @allure.epic("Аутентификация")
 @allure.feature("Полный цикл")
@@ -23,7 +24,7 @@ class TestAuthFlow:
             phone="+79990001122",
             password="password123"
         )
-        
+        register_page.check_redirect()
         # Should redirect to login
         assert "/login" in page.url
         register_page.take_screenshot("after_registration")
@@ -34,6 +35,7 @@ class TestAuthFlow:
         login_page = LoginPage(page)
         login_page.navigate("/login")
         login_page.login("test@example.com", "password123")
+        login_page.check_redirect()
         
         # Should redirect to main page
         assert page.url.rstrip("/") in ["http://localhost:5137/", "http://localhost:5137"]
@@ -64,12 +66,14 @@ class TestAuthFlow:
         unique_email = f"cycle_{uuid.uuid4().hex[:8]}@example.com"
         password = "password123"
         register_page.register("Cycle", "User", unique_email, "", password)
+        register_page.check_redirect()
         
         # Login
         login_page = LoginPage(page)
         login_page.login(unique_email, password)
+        login_page.check_redirect()
         
         # Verify we're logged in
         news_list = NewsListPage(page)
         news_list.navigate("/")
-        expect(page.get_by_role("button", name="+ Добавить новость")).to_be_visible()
+        expect(news_list.page.get_by_role("link", name="+ Добавить новость")).to_be_visible()

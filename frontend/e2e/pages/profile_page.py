@@ -36,3 +36,6 @@ class ProfilePage(BasePage):
     @allure.step("Проверить фото видно")
     def should_see_photo(self):
         expect(self.page.locator(".avatar img, .avatar-placeholder img, img[alt='Фото']").first).to_be_visible()
+
+    def check_redirect(self):
+        expect(self.page.get_by_role("button", name="Сохранить")).to_be_visible()

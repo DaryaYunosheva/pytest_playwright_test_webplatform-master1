@@ -17,6 +17,7 @@ class LoginPage(BasePage):
         self.page.get_by_role("button", name="Войти").click()
         self.page.wait_for_load_state("networkidle")
 
+
     @allure.step("Войти как {email}")
     def login(self, email: str, password: str):
         self.fill_email(email)
@@ -26,3 +27,7 @@ class LoginPage(BasePage):
     @allure.step("Проверить сообщение об ошибке")
     def should_see_error(self):
         expect(self.page.locator(".alert-error")).to_be_visible()
+
+    @allure.step("Проверить редирект")
+    def check_redirect(self):
+        expect(self.page.get_by_role("link", name="+ Добавить новость")).to_be_visible()

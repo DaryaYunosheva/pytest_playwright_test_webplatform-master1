@@ -38,3 +38,16 @@ class NewsCreatePage(BasePage):
         if tags:
             self.fill_tags(tags)
         self.submit()
+
+    @allure.step("Проверить редирект")
+    def  check_redirect_to_create(self):
+        expect(self.page.get_by_role("button", name = "Создать")).to_be_visible()
+
+    @allure.step("Проверить редирект")
+    def check_redirect_to_news(self):
+        expect(self.page.get_by_role("button", name="Создать")).not_to_be_visible()
+        expect(self.page.locator('input[name="title"]')).not_to_be_visible()
+        assert "/news/create" not in self.page.url
+
+    def check_no_redirect_to_create(self):
+        expect(self.page.get_by_role("button", name="Войти")).to_be_visible()
