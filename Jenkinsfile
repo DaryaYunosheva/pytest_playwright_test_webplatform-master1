@@ -14,7 +14,6 @@ pipeline {
     environment {
         BASE_URL = 'http://localhost:5137'
         API_URL  = 'http://localhost:8888'
-        COMPOSE_PROJECT_NAME = "webplatform_${env.BUILD_NUMBER}" // изоляция между сборками
     }
 
     options {
