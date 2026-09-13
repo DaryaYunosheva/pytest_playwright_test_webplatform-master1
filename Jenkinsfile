@@ -39,8 +39,7 @@ pipeline {
                 bat '''
                     if exist .venv rmdir /s /q .venv
                     python -m venv .venv
-
-
+                    .venv\\Scripts\\python.exe -m pip install -r backend\\requirements.txt
                     .venv\\Scripts\\python.exe -m pip install -r backend\\requirements-test.txt
 
 
@@ -72,9 +71,6 @@ pipeline {
 
                         mkdir frontend\\allure-results
                         mkdir frontend\\traces
-
-                        set BASE_URL=%BASE_URL%
-                        set API_URL=%API_URL%
 
                         .venv\\Scripts\\python.exe -m pytest frontend\\e2e\\tests ^
                             --alluredir=frontend\\allure-results ^
