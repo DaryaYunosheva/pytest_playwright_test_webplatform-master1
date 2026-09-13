@@ -34,8 +34,8 @@ pipeline {
                 bat '''
                     if exist .venv rmdir /s /q .venv
                     python -m venv .venv
-                    .venv\\Scripts\\python.exe -m pip install -r backend\\requirements.txt
-                    .venv\\Scripts\\python.exe -m pip install -r backend\\requirements-test.txt
+                    pip install -r backend\\requirements.txt
+                    pip install -r backend\\requirements-test.txt
 
 
                 '''
