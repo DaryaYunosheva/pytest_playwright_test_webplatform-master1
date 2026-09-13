@@ -14,6 +14,11 @@ pipeline {
         API_URL  = 'http://localhost:8888'
     }
 
+    stage('Checkout') {
+        steps {
+            checkout scm
+        }
+    }
 
         stage('Check environment') {
             steps {
