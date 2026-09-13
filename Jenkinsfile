@@ -9,11 +9,6 @@ pipeline {
         jdk 'jdk21'
     }
 
-    environment {
-        BASE_URL = 'http://localhost:5137'
-        API_URL  = 'http://localhost:8888'
-    }
-
     stages {
 
         stage('Check environment') {
