@@ -14,13 +14,6 @@ pipeline {
         API_URL  = 'http://localhost:8888'
     }
 
-    stages {
-
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
 
         stage('Check environment') {
             steps {
@@ -40,18 +33,18 @@ pipeline {
             }
         }
 
-        stage('Wait for app') {
-            steps {
-                bat '''
-                    echo Waiting for frontend...
-                    powershell -Command "$timeout=120;$elapsed=0; while ($elapsed -lt $timeout) { try { Invoke-WebRequest -Uri %BASE_URL% -UseBasicParsing -TimeoutSec 5 | Out-Null; Write-Host 'Frontend is ready'; exit 0 } catch { Start-Sleep -Seconds 5; $elapsed += 5 } }; Write-Error 'Frontend did not start'; exit 1"
-                '''
-                bat '''
-                    echo Waiting for backend...
-                    powershell -Command "$timeout=120;$elapsed=0; while ($elapsed -lt $timeout) { try { Invoke-WebRequest -Uri %API_URL% -UseBasicParsing -TimeoutSec 5 | Out-Null; Write-Host 'Backend is ready'; exit 0 } catch { Start-Sleep -Seconds 5; $elapsed += 5 } }; Write-Error 'Backend did not start'; exit 1"
-                '''
-            }
-        }
+//         stage('Wait for app') {
+//             steps {
+//                 bat '''
+//                     echo Waiting for frontend...
+//                     powershell -Command "$timeout=120;$elapsed=0; while ($elapsed -lt $timeout) { try { Invoke-WebRequest -Uri %BASE_URL% -UseBasicParsing -TimeoutSec 5 | Out-Null; Write-Host 'Frontend is ready'; exit 0 } catch { Start-Sleep -Seconds 5; $elapsed += 5 } }; Write-Error 'Frontend did not start'; exit 1"
+//                 '''
+//                 bat '''
+//                     echo Waiting for backend...
+//                     powershell -Command "$timeout=120;$elapsed=0; while ($elapsed -lt $timeout) { try { Invoke-WebRequest -Uri %API_URL% -UseBasicParsing -TimeoutSec 5 | Out-Null; Write-Host 'Backend is ready'; exit 0 } catch { Start-Sleep -Seconds 5; $elapsed += 5 } }; Write-Error 'Backend did not start'; exit 1"
+//                 '''
+//             }
+//         }
 
         stage('Install test dependencies') {
             steps {
