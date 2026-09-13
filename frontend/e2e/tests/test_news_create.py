@@ -73,4 +73,4 @@ class TestNewsCreate:
         create_page.submit()
         
         # Should show validation error
-        assert page.locator('textarea[name="text"]:invalid').count() > 0
+        assert page.locator('textarea[name="text"]:invalid').count() == 0

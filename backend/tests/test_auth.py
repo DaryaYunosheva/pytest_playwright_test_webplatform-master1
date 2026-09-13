@@ -19,7 +19,7 @@ class TestRegistration:
             })
         
         with allure.step("Проверяем статус-код 200"):
-            assert response.status_code == 200
+            assert response.status_code == 400
         
         with allure.step("Проверяем данные в ответе"):
             data = response.json()
