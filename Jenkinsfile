@@ -1,24 +1,17 @@
 pipeline {
     agent any
 
-    // Автотриггер: если джоба настроена как "Pipeline script from SCM" +
-    // включён GitLab/GitHub webhook (или Poll SCM ниже) - сборка стартует
-    // сама при пуше в репозиторий. Без этого блока пайплайн запускается
-    // только вручную, что и выглядело как "странная" работа CI.
-
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
 
     tools {
-        jdk 'jdk21' // нужен для Allure CLI, который вызывается через шаг allure ниже
+        jdk 'jdk21'
     }
 
     environment {
         BASE_URL = 'http://localhost:5137'
         API_URL  = 'http://localhost:8888'
-    }
-
-    options {
-        timestamps()
-        disableConcurrentBuilds() // 2 параллельных docker-compose на одних портах = коллизия
     }
 
     stages {
@@ -39,17 +32,10 @@ pipeline {
             }
         }
 
-        stage('Stop previous containers') {
-            steps {
-                // Данные в Postgres (volume) намеренно НЕ трогаем -
-                // они переживают билд к билду. Останавливаем только
-                // старые контейнеры, чтобы поднять их заново на актуальном коде.
-                bat 'docker-compose down || exit 0'
-            }
-        }
 
         stage('Start app') {
             steps {
+                bat 'docker-compose down || exit 0'
                 bat 'docker-compose up -d --build'
             }
         }
@@ -121,7 +107,7 @@ pipeline {
 
     post {
         always {
-            echo 'Stopping application (data volumes kept)'
+            echo 'Stopping application'
             bat 'docker-compose down || exit 0'
 
             archiveArtifacts artifacts: 'backend/allure-results/**, backend/test-results.xml, frontend/allure-results/**, frontend/traces/**, frontend/test-results.xml',
@@ -130,14 +116,7 @@ pipeline {
             junit testResults: 'backend/test-results.xml, frontend/test-results.xml',
                 allowEmptyResults: true
 
-            // Требует установленного плагина "Allure Jenkins Plugin" и
-            // сконфигурированного Allure Commandline в
-            // Manage Jenkins -> Tools -> Allure Commandline installations (имя 'allure').
-            // Без этого шага allure-results просто лежат сырыми файлами -
-            // отчёта в интерфейсе Jenkinsа не будет, хотя JDK для него уже подключен.
-            allure includeProperties: false,
-                jdk: '',
-                results: [[path: 'backend/allure-results'], [path: 'frontend/allure-results']]
+            allure results: [[path: 'backend/allure-results'], [path: 'frontend/allure-results']]
         }
     }
 }
