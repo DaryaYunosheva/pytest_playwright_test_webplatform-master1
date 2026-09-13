@@ -57,7 +57,7 @@ pipeline {
             }
         }
 
-        stage('Run UI tests') {
+        stage('UI tests') {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     bat '''
